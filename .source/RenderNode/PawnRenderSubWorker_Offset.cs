@@ -32,14 +32,6 @@ namespace Exosuit
                 offset += ext.headData.OffsetForRot(parms.facing) == Vector3.zero ? offset : ext.headData.OffsetForRot(parms.facing);
             }
         }
-        //public override void TransformLayer(PawnRenderNode node, PawnDrawParms parms, ref float layer)
-        //{
-        //    if (MechUtility.HasCore(parms.pawn, out var p) && p.def.GetModExtension<ApparelRenderOffsets>()?.headData != null)
-        //    {
-        //        var ext = p.def.GetModExtension<ApparelRenderOffsets>();
-        //        layer += ext.headData.LayerForRot(parms.facing, layer);
-        //    }
-        //}
         public override bool CanDrawNowSub(PawnRenderNode node, PawnDrawParms parms)
         {
             if (!MechUtility.HasCore(parms.pawn, out var p)) return base.CanDrawNowSub(node, parms);
