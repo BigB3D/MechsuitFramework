@@ -12,8 +12,8 @@ using static HarmonyLib.AccessTools;
 
 namespace Exosuit
 {
+    [StaticConstructorOnStartup]
     public class ExosuitMod : Mod
-        
     {
         internal static Harmony instance;
         public ExosuitMod(ModContentPack content) : base(content)

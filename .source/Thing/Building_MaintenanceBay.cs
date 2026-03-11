@@ -7,12 +7,12 @@ using RimWorld.Utility;
 using UnityEngine;
 using Verse;
 using Verse.AI;
-
+using Multiplayer.API;
 
 
 namespace Exosuit
 {
-    //维修 TODO: 统一为一个整备的工作，先装弹，再维修
+    //维修 TODO: 统一为一个整备的工作，先装弹，再维修 (Repair TODO: The entire maintenance process is unified into one step: first load the ammunition, then perform repairs.)
     public partial class Building_MaintenanceBay : Building
     {
         public CompAffectedByFacilities CompAffectedBy => GetComp<CompAffectedByFacilities>();
@@ -27,9 +27,9 @@ namespace Exosuit
         }
         public BayExtension Ext=>extension??=def.GetModExtension<BayExtension>();
         private BayExtension extension;
-        public bool CanRepair =>Ext.canRepair&& Faction.IsPlayer && autoRepair ;//臨時停機點不能修 TODO: 给我去xml里写能不能修呀。
+        public bool CanRepair =>Ext.canRepair&& Faction.IsPlayer && autoRepair ;//臨時停機點不能修 TODO: 给我去xml里写能不能修呀。(The temporary outage point cannot be repaired. TODO: Please write whether it can be repaired in the XML file.)
         public bool CanReload => Ext.canLoad&&Faction.IsPlayer && autoReload   ;
-        public bool NeedRepair //只要有一個需要修，那就能修。
+        public bool NeedRepair //只要有一個需要修，那就能修 (If there's even one thing that needs fixing, then it can be fixed.)
         {
             get
             {
@@ -122,41 +122,55 @@ namespace Exosuit
             if (HasGearCore && Faction.IsPlayer)
             {
                 var assignable = GetComp<CompAssignableToPawn_Parking>();
-                if (assignable!=null && assignable.AssignedPawnsForReading.Any())
+                if (assignable != null && assignable.AssignedPawnsForReading.Any())
                 {
                     Command_Action command_assignedGetIn = new()
                     {
                         defaultLabel = "WG_GetInAssigned".Translate(),
                         icon = Resources.WG_GetInWalker,
-                        action = delegate {
+                        action = delegate
+                        {
+
                             var cand =
-                            assignable.AssignedPawnsForReading.Where(
-                                p => p.MapHeld == MapHeld && p.Spawned 
-                                && !p.DeadOrDowned && CanAcceptPawn(p));
-                            if (cand.Count()>1)
+                                assignable.AssignedPawnsForReading.Where(p => p.MapHeld == MapHeld && p.Spawned
+                                    && !p.DeadOrDowned && CanAcceptPawn(p));
+                            if (cand.Count() > 1)
                             {
                                 Find.WindowStack.Add(new FloatMenu(
-                                    cand.Select(p=>new FloatMenuOption(p.NameShortColored,                      delegate
+                                    cand.Select(p => new FloatMenuOption(p.NameShortColored, delegate
+                                    {
+                                        [SyncMethod]
+                                        void SyncGetInManyPawns()
                                         {
                                             p.jobs.StartJob(
                                                 JobMaker.MakeJob(
-                                                    JobDefOf.WG_GetInWalkerCore, this),JobCondition.InterruptForced);
-                                        })).ToList()
-                                    ));
+                                                    JobDefOf.WG_GetInWalkerCore, this), JobCondition.InterruptForced);
+                                        }
+
+                                        SyncGetInManyPawns();
+                                    })).ToList()
+                                ));
                             }
                             else if (cand.Any())
                             {
-                                cand.First().jobs.StartJob(JobMaker.MakeJob(JobDefOf.WG_GetInWalkerCore, this), JobCondition.InterruptForced);
+                                [SyncMethod]
+                                void SyncGetInOnePawn()
+                                {
+                                    cand.First().jobs.StartJob(JobMaker.MakeJob(JobDefOf.WG_GetInWalkerCore, this),
+                                        JobCondition.InterruptForced);
+                                }
+
+                                SyncGetInOnePawn();
                             }
-                        },
-                        
-                        
+                        }
                     };
-                    if (!assignable.AssignedPawnsForReading.Any(p=>p.MapHeld==MapHeld&&p.Spawned&&!p.DeadOrDowned && CanAcceptPawn(p)))
+
+                    if (!assignable.AssignedPawnsForReading.Any(p =>
+                            p.MapHeld == MapHeld && p.Spawned && !p.DeadOrDowned && CanAcceptPawn(p)))
                     {
                         command_assignedGetIn.Disable("WG_NoAvailablePilot".TranslateSimple());
                     }
-                    
+
                     yield return command_assignedGetIn;
                 }
 
@@ -167,13 +181,18 @@ namespace Exosuit
                     targetingParams = TargetingParameters.ForPawns(),
                     action = (tar) =>
                     {
-                        if (tar.Pawn == null || !CanAcceptPawn(tar.Pawn) || tar.Pawn.Downed) return;
-                        tar.Pawn.jobs.StartJob(JobMaker.MakeJob(JobDefOf.WG_GetInWalkerCore, this), JobCondition.InterruptForced);
+                        [SyncMethod]
+                        void SyncGetIn()
+                        {
+                            if (tar.Pawn == null || !CanAcceptPawn(tar.Pawn) || tar.Pawn.Downed) return;
+                            tar.Pawn.jobs.StartJob(JobMaker.MakeJob(JobDefOf.WG_GetInWalkerCore, this),
+                                JobCondition.InterruptForced);
+                        }
+
+                        SyncGetIn();
                     }
                 };
                 yield return command_GetIn;
-                
-                
 
                 Command_Toggle toggle_autoRepair = new()
                 {
@@ -183,21 +202,25 @@ namespace Exosuit
                     isActive = () => autoRepair,
                     toggleAction = delegate
                     {
-                        autoRepair = !autoRepair;
+                        [SyncMethod]
+                        void SyncAutoRepair()
+                        {
+                            autoRepair = !autoRepair;
+                        }
+
+                        SyncAutoRepair();
                     }
                 };
                 yield return toggle_autoRepair;
             }
 
-            if (Prefs.DevMode == true && DebugSettings.godMode==true)
+            if (Prefs.DevMode == true && DebugSettings.godMode == true)
             {
                 Command_Action command_renderTree = new()
                 {
                     defaultLabel = "Show Render Tree",
-                    action = () => {                        
-                        Find.WindowStack.Add(new Dialog_DebugRenderTreeFixed(Dummy));
-                    }
-                    
+                    action = () => { Find.WindowStack.Add(new Dialog_DebugRenderTreeFixed(Dummy)); }
+
                 };
                 yield return command_renderTree;
             }
@@ -207,6 +230,7 @@ namespace Exosuit
                 yield return gizmo;
             }
         }
+
         public override void Destroy(DestroyMode mode = DestroyMode.Vanish)
         {
             foreach (Apparel a in DummyModules)

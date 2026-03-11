@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "d:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\MechsuitFramework\\.source\\Exosuit.csproj": {}
+    "/home/boris/.local/share/Steam/steamapps/common/RimWorld/Mods/MechsuitFramework/.source/Exosuit.csproj": {}
   },
   "projects": {
-    "d:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\MechsuitFramework\\.source\\Exosuit.csproj": {
+    "/home/boris/.local/share/Steam/steamapps/common/RimWorld/Mods/MechsuitFramework/.source/Exosuit.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\MechsuitFramework\\.source\\Exosuit.csproj",
+        "projectUniqueName": "/home/boris/.local/share/Steam/steamapps/common/RimWorld/Mods/MechsuitFramework/.source/Exosuit.csproj",
         "projectName": "Exosuit",
-        "projectPath": "d:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\MechsuitFramework\\.source\\Exosuit.csproj",
-        "packagesPath": "C:\\Users\\wcnnn\\.nuget\\packages\\",
-        "outputPath": "d:\\SteamLibrary\\steamapps\\common\\RimWorld\\Mods\\MechsuitFramework\\.source\\obj\\",
+        "projectPath": "/home/boris/.local/share/Steam/steamapps/common/RimWorld/Mods/MechsuitFramework/.source/Exosuit.csproj",
+        "packagesPath": "/home/boris/.nuget/packages/",
+        "outputPath": "/home/boris/.local/share/Steam/steamapps/common/RimWorld/Mods/MechsuitFramework/.source/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\wcnnn\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config"
+          "/home/boris/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net472"
@@ -42,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.100"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net472": {
@@ -62,9 +58,19 @@
               "include": "Compile, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "target": "Package",
               "version": "[2.3.7-prerelease, )"
+            },
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.3, )",
+              "autoReferenced": true
+            },
+            "RimWorld.MultiplayerAPI": {
+              "target": "Package",
+              "version": "[0.6.*, )"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/var/run/host/usr/share/dotnet/sdk/9.0.311/RuntimeIdentifierGraph.json"
         }
       }
     }

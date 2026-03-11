@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine;
 using Verse;
 using static Verse.Text;
+using Multiplayer.API;
 
 namespace Exosuit
 {
@@ -324,29 +325,29 @@ namespace Exosuit
                 Thing thing = null;
                 bool hasThing = slot != null && OccupiedSlots.TryGetValue(slot, out thing);
                 
-                // 检查是否有待安装的模块（用于预览）
+                // 检查是否有待安装的模块（用于预览）(Check if there are any modules to be installed (for previewing).)
                 Thing pendingModule = slot != null ? Parent.GetPendingInstallForSlot(slot) : null;
                 bool hasPending = pendingModule != null && !hasThing;
                 
-                // 检查是否待卸载（纯卸载，不是替换）
-                // 需要同时检查槽位和模块，因为多槽位模块只有一个 targetSlot
+                // 检查是否待卸载（纯卸载，不是替换）(Check if it needs to be uninstalled (pure uninstallation, not replacement).)
+                // 需要同时检查槽位和模块，因为多槽位模块只有一个 targetSlot (Translate: Both the slot and the module need to be checked simultaneously, because a multi-slot module only has one slot.)
                 bool isPendingRemove = slot != null && pendingModule == null && 
                     (Parent.IsSlotPendingRemove(slot) || (hasThing && Parent.IsModulePendingRemove(thing)));
                 
-                // 检查是否待替换（有待安装模块且当前有模块）
+                // 检查是否待替换（有待安装模块且当前有模块）(Check if a module needs to be replaced (a module needs to be installed and the module is currently available).)
                 bool isPendingReplace = slot != null && pendingModule != null && hasThing;
                 
-                //标签
+                //标签 (Label)
                 if (slot != null)
                 {
                     if (hasThing)
                     {
                         var c = thing.TryGetComp<CompSuitModule>();
-                        //血条
+                        //血条 (Health Bar)
                         GizmoHealthBar(gizmoRect, slot, (c.HP / (float)c.MaxHP));
                     }
                     
-                    // 槽位名称
+                    // 槽位名称 (Slot name)
                     string label = slot.label.Translate();
                     Text.Font = GameFont.Small;
                     Vector2 labelSize = CalcSize(label);
@@ -355,7 +356,7 @@ namespace Exosuit
                     Rect labelBlock = new(labelX, gizmoRect.y - labelSize.y, labelWidth, labelSize.y);
                     Widgets.Label(labelBlock, label);
                     
-                    // 状态文本显示在槽位图标顶部
+                    // 状态文本显示在槽位图标顶部 (Status text is displayed at the top of the slot icon.)
                     string statusText = null;
                     Color statusColor = Color.white;
                     if (disabled)
@@ -379,7 +380,7 @@ namespace Exosuit
                         statusColor = new Color(1f, 0.5f, 0.5f);
                     }
                     
-                    // 记录状态文本，稍后在槽位内绘制
+                    // 记录状态文本，稍后在槽位内绘制 (Record status text, to be drawn later in the slot.)
                     if (statusText != null)
                     {
                         pendingStatusText = statusText;
@@ -392,13 +393,13 @@ namespace Exosuit
                 }
 
 
-                //灰边
+                //灰边 (gray edge)
                 {
                     Widgets.DrawBoxSolid(gizmoRect, grey);
                     gizmoRect = gizmoRect.ContractedBy(3f);
                 }
 
-                //底色
+                //底色 (background color)
                 {
                     GenUI.DrawTextureWithMaterial(gizmoRect, Command.BGTex, null);
                     if (disabled)
@@ -415,19 +416,19 @@ namespace Exosuit
                 if (slot == null) return;
                 Widgets.DrawHighlightIfMouseover(gizmoRect);
                 
-                // 绘制待安装模块的半透明预览
+                // 绘制待安装模块的半透明预览 (Draw a semi-transparent preview of the module to be installed.)
                 if (hasPending)
                 {
                     DrawPendingModulePreview(gizmoRect, pendingModule);
                 }
                 
-                // 绘制待卸载的标记
+                // 绘制待卸载的标记 (Draw the marker to be uninstalled)
                 if (isPendingRemove && hasThing)
                 {
                     DrawPendingRemoveOverlay(gizmoRect);
                 }
                 
-                //部件名字
+                //部件名字 (Part name)
                 if (hasThing)
                 {
                     Rect nameBlock = gizmoRect.BottomPart(1f / 8f);
@@ -441,7 +442,7 @@ namespace Exosuit
                         {
                             if (c is IReloadableComp reloadable)
                             {
-                                // 跳过没有充能的组件，继续检查下一个
+                                // 跳过没有充能的组件，继续检查下一个 (Skip the uncharged components and proceed to the next one.)
                                 if (reloadable.MaxCharges <= 0)
                                 {
                                     continue;
@@ -455,7 +456,7 @@ namespace Exosuit
                         }
                     }
                 }
-                // 显示待安装模块的名字
+                // 显示待安装模块的名字 (Displays the name of the module to be installed.)
                 else if (hasPending)
                 {
                     Rect nameBlock = gizmoRect.BottomPart(1f / 8f);
@@ -467,7 +468,7 @@ namespace Exosuit
                     GUI.color = Color.white;
                 }
                 
-                // 在槽位顶部绘制状态文本
+                // 在槽位顶部绘制状态文本 (Draw status text at the top of the slot.)
                 if (pendingStatusText != null)
                 {
                     Text.Font = GameFont.Tiny;
@@ -481,13 +482,13 @@ namespace Exosuit
             }
         }
         
-        // 绘制待安装模块的半透明预览（使用装甲外观而非物品外观）
+        // 绘制待安装模块的半透明预览（使用装甲外观而非物品外观）(Draw a semi-transparent preview of the module to be installed (using armor appearance instead of item appearance).)
         private void DrawPendingModulePreview(Rect rect, Thing module)
         {
             if (module == null) return;
             if (!module.TryGetComp(out CompSuitModule comp)) return;
             
-            // 获取装甲的 ThingDef
+            // 获取装甲的 ThingDef (Get armored)
             ThingDef apparelDef = comp.Props.EquipedThingDef;
             if (apparelDef?.graphicData?.texPath == null) return;
             
@@ -497,7 +498,7 @@ namespace Exosuit
             GUI.color = Color.white;
         }
         
-        // 绘制待卸载的覆盖层
+        // 绘制待卸载的覆盖层 (Draw the overlay to be unloaded)
         private void DrawPendingRemoveOverlay(Rect rect)
         {
             // 绘制红色半透明覆盖
@@ -553,7 +554,7 @@ namespace Exosuit
 
             switch (Event.current.button)
             {
-                case 0://左键
+                case 0://左键 (left click)
                     {
                         
                         if (OccupiedSlots.ContainsKey(slot))
@@ -563,7 +564,7 @@ namespace Exosuit
                         else Find.WindowStack.Add(new Dialog_InfoCard(slot));
                         break;
                     }
-                case 1://右键
+                case 1://右键 (left click)
                     {
 
 
@@ -577,10 +578,10 @@ namespace Exosuit
         {
             List<FloatMenuOption> options = [];
             
-            // 检查是否是核心槽位
+            // 检查是否是核心槽位 (Check if it is a core slot.)
             bool isCoreSlot = slot != null && slot.isCoreFrame;
             
-            // 如果核心工作进行中且不是核心槽位，显示提示并只允许取消核心工作
+            // 如果核心工作进行中且不是核心槽位，显示提示并只允许取消核心工作 (If a core task is in progress and it is not in a core slot, a prompt will be displayed, and only canceling the core task will be allowed.)
             if (!isCoreSlot && Parent.IsCoreWorkInProgress())
             {
                 options.Add(new("WG_CoreWorkInProgress".Translate(), null));
@@ -591,7 +592,8 @@ namespace Exosuit
                 return options;
             }
             
-            if (slot != null && OccupiedSlots.TryGetValue(slot, out Thing t)) //如果slot有填模塊，額外顯示移除選項
+            //TO DO: MP sync not working, building_maintenancebay probably needs to be a IThingHolder because RwSerialization cannot find a parent for the Thing so it's unable to reliably serialize it so it throws an exception
+            if (slot != null && OccupiedSlots.TryGetValue(slot, out Thing t)) //如果slot有填模塊，額外顯示移除選項 (If the slot has a filled module, a removal option will be displayed additionally.)
             {
                 if (Parent.Ext.canStyle)
                 {
@@ -599,20 +601,26 @@ namespace Exosuit
                         Find.WindowStack.Add(new Dialog_ChooseColor(
                             "ChangeModuleColor".TranslateSimple(), Find.FactionManager.OfPlayer.AllegianceColor, CachedColors, (color) =>
                             {
+                               // [SyncMethod]
+                                //void SyncChangeModuleColor(Color color, Thing t)
+                               // {
+                               //     t.SetColor(color);
+                               // }
+                               // SyncChangeModuleColor(color, t);
                                 t.SetColor(color);
-                                //Parent.SetCacheDirty(); 应该自动就更新了渲染cache
+                                //Parent.SetCacheDirty(); 应该自动就更新了渲染cache (The rendering cache should be updated automatically.)
                             })
                             );
                     }, MenuOptionPriority.High));
                 }
                 
-                // 检查是否已在待卸载队列中（包括替换操作的卸载阶段）
+                // 检查是否已在待卸载队列中（包括替换操作的卸载阶段）Check if it is already in the unload queue (including the unload phase of the replacement operation).
                 if (Parent.IsSlotPendingWork(slot))
                 {
                     Thing pendingModule = Parent.GetPendingInstallForSlot(slot);
                     if (pendingModule != null)
                     {
-                        // 这是替换操作，显示取消替换
+                        // 这是替换操作，显示取消替换 (This is a replacement operation; the option to cancel the replacement is now displayed.)
                         options.Add(new("WG_CancelReplace".Translate(pendingModule.LabelCap), () =>
                         {
                             Parent.CancelPendingWork(slot);
@@ -620,7 +628,7 @@ namespace Exosuit
                     }
                     else
                     {
-                        // 这是纯卸载操作
+                        // 这是纯卸载操作 (This is a pure uninstall operation)
                         options.Add(new("WG_CancelRemove".Translate(t.LabelCap), () =>
                         {
                             Parent.CancelPendingWork(slot);
@@ -644,23 +652,32 @@ namespace Exosuit
                 return options;
             }
             
-            // 检查槽位是否已有模块（用于决定显示"安装"还是"替换"）
+            // 检查槽位是否已有模块（用于决定显示"安装"还是"替换"）(Check if the slot already has a module (to determine whether to display "Install" or "Replace").)
             bool slotHasModule = slot != null && OccupiedSlots.ContainsKey(slot);
-            // 检查是否有非核心模块安装（用于核心替换时的保留选项）
+            // 检查是否有非核心模块安装（用于核心替换时的保留选项）(Check if any non-core modules are installed (these are reserved options for core replacement).)
             bool hasNonCoreModules = OccupiedSlots.Any(kvp => !kvp.Key.isCoreFrame);
             
             foreach (var thing in modules)
             {
-                // 获取模块冲突信息
+                // 获取模块冲突信息 (Get module conflict information)
                 string conflictInfo = GetModuleInfoString(thing);
                 
-                // 检查是否已在待安装队列中
+                // 检查是否已在待安装队列中 (Check if it is already in the installation queue.)
                 if (Parent.IsModulePendingInstall(thing))
                 {
                     options.Add(CreateModuleOption(
                         "WG_CancelInstall".Translate(thing.LabelCap) + conflictInfo,
-                        () => Parent.CancelPendingInstall(thing),
-                        thing
+                        () =>
+                        {
+                            [SyncMethod]
+                            void SyncCancelInstall(Building_MaintenanceBay parent, Thing thing)
+                            {
+                                parent.CancelPendingInstall(thing); 
+                            } 
+                            SyncCancelInstall(Parent, thing); 
+                        }, thing
+                            //Parent.CancelPendingInstall(thing),
+                            //thing
                     ));
                 }
                 else
@@ -670,16 +687,32 @@ namespace Exosuit
                     {
                         options.Add(CreateModuleOption(
                             "WG_RequestReplaceCoreRemoveAll".Translate(thing.LabelCap) + conflictInfo,
-                            () => RequestInstallModule(thing, false),
-                            thing
+                            () =>
+                            {
+                                [SyncMethod]
+                                void SyncRequestReplaceCoreRemoveAll(Building_MaintenanceBay parent, Thing thing)
+                                {
+                                    parent.RequestInstallModule(thing, false);
+                                }
+                                SyncRequestReplaceCoreRemoveAll(Parent, thing);
+                               // Parent.RequestInstallModule(thing, false);
+                            }, thing
                         ));
                         
                         if (hasNonCoreModules)
                         {
                             options.Add(CreateModuleOption(
                                 "WG_RequestReplaceCoreKeepModules".Translate(thing.LabelCap) + conflictInfo,
-                                () => RequestInstallModule(thing, true),
-                                thing
+                                () =>
+                                {
+                                    [SyncMethod]
+                                    void SyncRequestReplaceCoreKeepModules(Building_MaintenanceBay parent, Thing thing)
+                                    {
+                                        parent.RequestInstallModule(thing, true);
+                                    }
+                                    SyncRequestReplaceCoreKeepModules(Parent, thing);
+                                    //Parent.RequestInstallModule(thing, true);
+                                }, thing
                             ));
                         }
                     }
@@ -687,16 +720,33 @@ namespace Exosuit
                     {
                         options.Add(CreateModuleOption(
                             "WG_RequestReplace".Translate(thing.LabelCap) + conflictInfo,
-                            () => RequestInstallModule(thing, false),
-                            thing
+                            () =>
+                            {
+                                [SyncMethod]
+                                void SyncRequestReplace(Building_MaintenanceBay parent, Thing thing)
+                                {
+                                    parent.RequestInstallModule(thing, false);
+                                }
+
+                                SyncRequestReplace(Parent, thing);
+                                //RequestInstallModule(thing, false);
+                            }, thing
                         ));
                     }
                     else
                     {
                         options.Add(CreateModuleOption(
                             "WG_RequestInstall".Translate(thing.LabelCap) + conflictInfo,
-                            () => RequestInstallModule(thing, false),
-                            thing
+                            () =>
+                            {
+                                [SyncMethod]
+                                void SyncRequestInstall(Building_MaintenanceBay parent, Thing thing)
+                                {
+                                    parent.RequestInstallModule(thing, false);
+                                }
+                                SyncRequestInstall(Parent, thing);
+                               //RequestInstallModule(thing, false);
+                            }, thing
                         ));
                     }
                 }
